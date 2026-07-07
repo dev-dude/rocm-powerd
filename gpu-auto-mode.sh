@@ -157,11 +157,34 @@ idle_count=0
 
 # Export tuning values to helper scripts (they inherit environment)
 if [[ -n "$CFG_PATH" ]]; then
-  CPU_MAX_FREQ_KHZ=$(toml_get tuning cpu_max_freq_khz "" "$CFG_PATH" )
-  if [[ -n "$CPU_MAX_FREQ_KHZ" && "$CPU_MAX_FREQ_KHZ" != "" ]]; then
-    export CPU_MAX_FREQ_KHZ
-    log "Exported CPU_MAX_FREQ_KHZ=${CPU_MAX_FREQ_KHZ}"
-  fi
+    AI_CPU_MAX_FREQ_MHZ=$(toml_get ai_mode cpu_max_freq_mhz "" "$CFG_PATH" )
+    AI_SCLK=$(toml_get ai_mode sclk "" "$CFG_PATH" )
+    AI_MCLK=$(toml_get ai_mode mclk "" "$CFG_PATH" )
+    IDLE_CPU_MAX_FREQ_MHZ=$(toml_get idle_mode cpu_max_freq_mhz "" "$CFG_PATH" )
+    CPU_MAX_FREQ_KHZ=$(toml_get tuning cpu_max_freq_khz "" "$CFG_PATH" )
+
+    if [[ -n "$AI_CPU_MAX_FREQ_MHZ" ]]; then
+        export AI_CPU_MAX_FREQ_MHZ
+        log "Exported AI_CPU_MAX_FREQ_MHZ=${AI_CPU_MAX_FREQ_MHZ}"
+    elif [[ -n "$CPU_MAX_FREQ_KHZ" ]]; then
+        export CPU_MAX_FREQ_KHZ
+        log "Exported legacy CPU_MAX_FREQ_KHZ=${CPU_MAX_FREQ_KHZ}"
+    fi
+
+    if [[ -n "$AI_SCLK" ]]; then
+        export AI_SCLK
+        log "Exported AI_SCLK=${AI_SCLK}"
+    fi
+
+    if [[ -n "$AI_MCLK" ]]; then
+        export AI_MCLK
+        log "Exported AI_MCLK=${AI_MCLK}"
+    fi
+
+    if [[ -n "$IDLE_CPU_MAX_FREQ_MHZ" ]]; then
+        export IDLE_CPU_MAX_FREQ_MHZ
+        log "Exported IDLE_CPU_MAX_FREQ_MHZ=${IDLE_CPU_MAX_FREQ_MHZ}"
+    fi
 fi
 
 do_check_and_apply() {

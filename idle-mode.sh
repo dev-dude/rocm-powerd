@@ -2,16 +2,22 @@
 # rocm-powerd: Idle mode helper
 # Restore automatic GPU power management and default CPU frequencies.
 
-set -e
+set -euo pipefail
 
 LOG_TAG="rocm-powerd-idle"
 log() { logger -t "$LOG_TAG" "$*" || echo "$*" >&2; }
 
-log "Applying idle mode"
+IDLE_CPU_MAX_FREQ_MHZ="${IDLE_CPU_MAX_FREQ_MHZ:-${CPU_MAX_FREQ_MHZ:-}}"
+if [[ -z "$IDLE_CPU_MAX_FREQ_MHZ" && -n "${CPU_MAX_FREQ_KHZ:-}" ]]; then
+    IDLE_CPU_MAX_FREQ_MHZ=$((CPU_MAX_FREQ_KHZ / 1000))
+fi
+IDLE_CPU_MAX_FREQ_MHZ="${IDLE_CPU_MAX_FREQ_MHZ:-3000}"
 
-cpupower frequency-set -u 3000MHz || log "cpupower failed"
-rocm-smi --resetclocks >/dev/null 2>&1 || log "rocm-smi resetclocks failed"
-rocm-smi --setperflevel auto >/dev/null 2>&1 || log "rocm-smi setperflevel failed"
-rocm-smi --resetprofile >/dev/null 2>&1 || log "rocm-smi resetprofile failed"
+log "Restoring idle mode: cpu_max=${IDLE_CPU_MAX_FREQ_MHZ}MHz"
 
-log "Idle mode applied"
+cpupower frequency-set -u "${IDLE_CPU_MAX_FREQ_MHZ}MHz"
+rocm-smi --resetclocks
+rocm-smi --setperflevel auto
+rocm-smi --resetprofile
+
+log "Idle mode restored"

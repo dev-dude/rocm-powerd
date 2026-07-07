@@ -22,8 +22,25 @@ idle = "./idle-mode.sh"
 # Keep simple for now; logs go to syslog via `logger`
 # syslog = true
 
-[tuning]
-# CPU maximum frequency to apply for AI mode, in kHz (e.g. 2400000 for 2.4GHz).
-# If empty or omitted, the scripts use their internal defaults.
-# Uncomment below to enable:
-# cpu_max_freq_khz = 2400000
+[ai_mode]
+# Commands run by ai-mode.sh by default:
+# cpupower frequency-set -u 3000MHz
+# rocm-smi --setperflevel manual
+# rocm-smi --setsclk 2
+# rocm-smi --setmclk 3
+cpu_max_freq_mhz = 3000
+sclk = 2
+mclk = 3
+
+[idle_mode]
+# Commands run by idle-mode.sh by default:
+# cpupower frequency-set -u 3000MHz
+# rocm-smi --resetclocks
+# rocm-smi --setperflevel auto
+# rocm-smi --resetprofile
+cpu_max_freq_mhz = 3000
+
+# Legacy fallback supported by helper scripts when ai_mode.cpu_max_freq_mhz
+# or idle_mode.cpu_max_freq_mhz are not set.
+# [tuning]
+# cpu_max_freq_khz = 3000000
