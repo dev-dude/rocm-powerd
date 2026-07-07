@@ -56,23 +56,17 @@ find_config() {
 get_gpu_power() {
     local out max=0
     if command -v rocm-smi >/dev/null 2>&1; then
-        out=$(rocm-smi --showpower 2>/dev/null || true)
-        # parse power values and normalize mW to W
+        out=$(rocm-smi 2>/dev/null || true)
         while IFS= read -r line; do
-            if [[ $line =~ ([0-9]+(\.[0-9]+)?)\s*([mM]?W)? ]]; then
-                val=${BASH_REMATCH[1]}
-                unit=${BASH_REMATCH[3]:-}
-                val=${val%.*}
-                if [[ -z "$unit" || ${unit,,} == "w" ]]; then
-                    if (( val > 10000 )); then
-                        # likely raw milliwatts reported without proper unit normalization
-                        val=$(( val / 1000 ))
+            if [[ $line =~ ^[[:space:]]*[0-9] ]]; then
+                for field in $line; do
+                    if [[ $field =~ ^([0-9]+(\.[0-9]+)?)W$ ]]; then
+                        val=${BASH_REMATCH[1]}
+                        val=${val%.*}
+                        (( val > max )) && max=$val
+                        break
                     fi
-                fi
-                if [[ ${unit,,} == "mw" ]]; then
-                    val=$(( val / 1000 ))
-                fi
-                (( val > max )) && max=$val
+                done
             fi
         done <<<"$out"
         if (( max > 0 )); then
