@@ -102,6 +102,9 @@ apply_cmd() {
 
 MODE="idle"
 
+# resolve script directory so relative helper paths work from systemd
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+
 # defaults
 BUSY_WATTS=120
 IDLE_WATTS=80
@@ -109,8 +112,8 @@ IDLE_DURATION_SEC=300
 POLL_INTERVAL=3
 BUSY_TRIGGER_COUNT=1
 IDLE_TRIGGER_COUNT=0
-AI_CMD="./ai-mode.sh"
-IDLE_CMD="./idle-mode.sh"
+AI_CMD="$SCRIPT_DIR/ai-mode.sh"
+IDLE_CMD="$SCRIPT_DIR/idle-mode.sh"
 
 # CLI parsing
 MODE_FLAG="daemon"
