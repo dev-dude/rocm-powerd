@@ -59,14 +59,18 @@ get_gpu_power() {
         out=$(rocm-smi --showpower 2>/dev/null || true)
         # parse power values and normalize mW to W
         while IFS= read -r line; do
-            if [[ $line =~ ([0-9]+(\.[0-9]+)?)\s*([mM]?W) ]]; then
+            if [[ $line =~ ([0-9]+(\.[0-9]+)?)\s*([mM]?W)? ]]; then
                 val=${BASH_REMATCH[1]}
-                unit=${BASH_REMATCH[3]}
+                unit=${BASH_REMATCH[3]:-}
+                val=${val%.*}
+                if [[ -z "$unit" || ${unit,,} == "w" ]]; then
+                    if (( val > 10000 )); then
+                        # likely raw milliwatts reported without proper unit normalization
+                        val=$(( val / 1000 ))
+                    fi
+                fi
                 if [[ ${unit,,} == "mw" ]]; then
-                    val=${val%.*}
                     val=$(( val / 1000 ))
-                else
-                    val=${val%.*}
                 fi
                 (( val > max )) && max=$val
             fi
