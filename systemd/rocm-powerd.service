@@ -1,0 +1,12 @@
+[Unit]
+Description=ROCm GPU power daemon (rocm-powerd)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/gpu-auto-mode.sh --daemon
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

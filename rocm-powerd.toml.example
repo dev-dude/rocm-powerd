@@ -1,0 +1,23 @@
+# Example rocm-powerd configuration (TOML)
+
+[powermanager]
+# Watt threshold to consider the system 'busy' and switch to AI mode
+busy_watt = 120
+# Watt threshold to consider the system 'idle'
+idle_watt = 80
+# Seconds the power must remain <= idle_watt before returning to idle mode
+idle_duration_sec = 300
+# Poll interval in seconds
+poll_interval = 3
+# Number of consecutive busy polls required to trigger AI mode
+busy_trigger_count = 1
+
+[scripts]
+# Command or script to run when switching to AI mode
+ai = "./ai-mode.sh"
+# Command or script to run when switching to IDLE mode
+idle = "./idle-mode.sh"
+
+[logging]
+# Keep simple for now; logs go to syslog via `logger`
+# syslog = true
