@@ -57,12 +57,17 @@ get_gpu_power() {
     local out max=0
     if command -v rocm-smi >/dev/null 2>&1; then
         out=$(rocm-smi --showpower 2>/dev/null || true)
-        # parse numbers with W
+        # parse power values and normalize mW to W
         while IFS= read -r line; do
-            if [[ $line =~ ([0-9]+(\.[0-9]+)?)\s*W ]]; then
+            if [[ $line =~ ([0-9]+(\.[0-9]+)?)\s*([mM]?W) ]]; then
                 val=${BASH_REMATCH[1]}
-                # integer comparison
-                val=${val%.*}
+                unit=${BASH_REMATCH[3]}
+                if [[ ${unit,,} == "mw" ]]; then
+                    val=${val%.*}
+                    val=$(( val / 1000 ))
+                else
+                    val=${val%.*}
+                fi
                 (( val > max )) && max=$val
             fi
         done <<<"$out"
