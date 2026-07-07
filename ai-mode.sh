@@ -11,7 +11,7 @@ log() { logger -t "$LOG_TAG" "$*" || echo "$*" >&2; }
 # Example: cap CPU max frequency to a conservative value for inference
 # Users can replace or extend this script to suit their hardware and needs.
 
-CPU_MAX_FREQ_KHZ="2400000"
+CPU_MAX_FREQ_KHZ="${CPU_MAX_FREQ_KHZ:-2400000}"
 
 log "Applying AI mode: capping CPU max frequency to ${CPU_MAX_FREQ_KHZ} kHz"
 if command -v cpupower >/dev/null 2>&1; then

@@ -21,3 +21,9 @@ idle = "./idle-mode.sh"
 [logging]
 # Keep simple for now; logs go to syslog via `logger`
 # syslog = true
+
+[tuning]
+# CPU maximum frequency to apply for AI mode, in kHz (e.g. 2400000 for 2.4GHz).
+# If empty or omitted, the scripts use their internal defaults.
+# Uncomment below to enable:
+# cpu_max_freq_khz = 2400000

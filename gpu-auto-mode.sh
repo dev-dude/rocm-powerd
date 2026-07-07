@@ -149,6 +149,15 @@ fi
 busy_count=0
 idle_count=0
 
+# Export tuning values to helper scripts (they inherit environment)
+if [[ -n "$CFG_PATH" ]]; then
+  CPU_MAX_FREQ_KHZ=$(toml_get tuning cpu_max_freq_khz "" "$CFG_PATH" )
+  if [[ -n "$CPU_MAX_FREQ_KHZ" && "$CPU_MAX_FREQ_KHZ" != "" ]]; then
+    export CPU_MAX_FREQ_KHZ
+    log "Exported CPU_MAX_FREQ_KHZ=${CPU_MAX_FREQ_KHZ}"
+  fi
+fi
+
 do_check_and_apply() {
     local power
     power=$(get_gpu_power)
