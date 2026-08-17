@@ -25,12 +25,17 @@ idle = "./idle-mode.sh"
 [ai_mode]
 # Commands run by ai-mode.sh by default:
 # cpupower frequency-set -u 3000MHz
+# Intel RAPL PL1 = 65W and PL2 = 90W
+# AMD GPU hwmon power1_cap = 294W
 # rocm-smi --setperflevel manual
 # rocm-smi --setsclk 2
-# rocm-smi --setmclk 3
+# rocm-smi --setmclk 1
 cpu_max_freq_mhz = 3000
-sclk = 2
-mclk = 3
+cpu_pl1_watts = 65
+cpu_pl2_watts = 90
+gpu_power_cap_watts = 294
+sclk_level = 2
+mclk_level = 1
 
 [idle_mode]
 # Commands run by idle-mode.sh by default:
@@ -39,6 +44,9 @@ mclk = 3
 # rocm-smi --setperflevel auto
 # rocm-smi --resetprofile
 cpu_max_freq_mhz = 3000
+
+# CPU/GPU power limits, GPU clock selections, and the GPU performance level
+# that were active before AI mode are captured and restored automatically.
 
 # Legacy fallback supported by helper scripts when ai_mode.cpu_max_freq_mhz
 # or idle_mode.cpu_max_freq_mhz are not set.

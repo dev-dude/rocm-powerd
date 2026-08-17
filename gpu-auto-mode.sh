@@ -26,13 +26,13 @@ err() { log "ERROR: $*"; }
 # TOML reader: find a key under a section. Simple and works for basic values.
 toml_get() {
     local section="$1" key="$2" default="$3" file="$4"
-    awk -v section="[$section]" -v key="$key" -v default="$default" '
-        BEGIN{found=0}
-        $0 ~ /^\s*\[/ {found = ($0==section)}
-        found && $0 ~ "^\s*"key"\s*=\s*" { 
-            line=$0; gsub(/^[^=]*=\s*/,"",line); gsub(/\s*#.*/,"",line); gsub(/"/,"",line); gsub(/\r/,"",line); gsub("\"","",line); print line; exit
+    awk -v section="[$section]" -v key="$key" -v fallback="$default" '
+        BEGIN{in_section=0; found=0}
+        $0 ~ /^[[:space:]]*\[/ {in_section = ($0==section)}
+        in_section && $0 ~ "^[[:space:]]*"key"[[:space:]]*=" {
+            line=$0; gsub(/^[^=]*=[[:space:]]*/,"",line); gsub(/[[:space:]]*#.*/,"",line); gsub(/\r/,"",line); gsub(/"/,"",line); print line; found=1; exit
         }
-        END{ if (NR && !found) print default }
+        END{ if (!found) print fallback }
     ' "$file" | sed -n '1p'
 }
 
@@ -158,8 +158,14 @@ idle_count=0
 # Export tuning values to helper scripts (they inherit environment)
 if [[ -n "$CFG_PATH" ]]; then
     AI_CPU_MAX_FREQ_MHZ=$(toml_get ai_mode cpu_max_freq_mhz "" "$CFG_PATH" )
-    AI_SCLK=$(toml_get ai_mode sclk "" "$CFG_PATH" )
-    AI_MCLK=$(toml_get ai_mode mclk "" "$CFG_PATH" )
+    AI_CPU_PL1_WATTS=$(toml_get ai_mode cpu_pl1_watts "65" "$CFG_PATH" )
+    AI_CPU_PL2_WATTS=$(toml_get ai_mode cpu_pl2_watts "90" "$CFG_PATH" )
+    AI_GPU_POWER_CAP_WATTS=$(toml_get ai_mode gpu_power_cap_watts "294" "$CFG_PATH" )
+    AI_SCLK_LEVEL=$(toml_get ai_mode sclk_level "" "$CFG_PATH" )
+    AI_MCLK_LEVEL=$(toml_get ai_mode mclk_level "" "$CFG_PATH" )
+    # Backward compatibility for configurations using the old clock key names.
+    [[ -n "$AI_SCLK_LEVEL" ]] || AI_SCLK_LEVEL=$(toml_get ai_mode sclk "2" "$CFG_PATH" )
+    [[ -n "$AI_MCLK_LEVEL" ]] || AI_MCLK_LEVEL=$(toml_get ai_mode mclk "1" "$CFG_PATH" )
     IDLE_CPU_MAX_FREQ_MHZ=$(toml_get idle_mode cpu_max_freq_mhz "" "$CFG_PATH" )
     CPU_MAX_FREQ_KHZ=$(toml_get tuning cpu_max_freq_khz "" "$CFG_PATH" )
 
@@ -171,15 +177,10 @@ if [[ -n "$CFG_PATH" ]]; then
         log "Exported legacy CPU_MAX_FREQ_KHZ=${CPU_MAX_FREQ_KHZ}"
     fi
 
-    if [[ -n "$AI_SCLK" ]]; then
-        export AI_SCLK
-        log "Exported AI_SCLK=${AI_SCLK}"
-    fi
-
-    if [[ -n "$AI_MCLK" ]]; then
-        export AI_MCLK
-        log "Exported AI_MCLK=${AI_MCLK}"
-    fi
+    export AI_CPU_PL1_WATTS AI_CPU_PL2_WATTS AI_GPU_POWER_CAP_WATTS
+    export AI_SCLK_LEVEL AI_MCLK_LEVEL
+    log "Exported AI power limits: PL1=${AI_CPU_PL1_WATTS}W PL2=${AI_CPU_PL2_WATTS}W GPU=${AI_GPU_POWER_CAP_WATTS}W"
+    log "Exported AI clock levels: SCLK=${AI_SCLK_LEVEL} MCLK=${AI_MCLK_LEVEL}"
 
     if [[ -n "$IDLE_CPU_MAX_FREQ_MHZ" ]]; then
         export IDLE_CPU_MAX_FREQ_MHZ

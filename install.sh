@@ -18,6 +18,7 @@ mkdir -p "$BINDIR"
 install -m 0755 gpu-auto-mode.sh "$BINDIR/gpu-auto-mode.sh"
 install -m 0755 ai-mode.sh "$BINDIR/ai-mode.sh"
 install -m 0755 idle-mode.sh "$BINDIR/idle-mode.sh"
+install -m 0644 power-control.sh "$BINDIR/power-control.sh"
 
 mkdir -p /etc/rocm-powerd
 if [[ ! -f /etc/rocm-powerd/rocm-powerd.toml ]]; then

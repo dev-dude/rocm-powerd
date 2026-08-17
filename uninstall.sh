@@ -14,7 +14,8 @@ fi
 
 systemctl disable --now "$SERVICE_NAME" || true
 rm -f "$SYSTEMD_DIR/$SERVICE_NAME"
-rm -f "$BINDIR/gpu-auto-mode.sh" "$BINDIR/ai-mode.sh" "$BINDIR/idle-mode.sh"
+rm -f "$BINDIR/gpu-auto-mode.sh" "$BINDIR/ai-mode.sh" "$BINDIR/idle-mode.sh" \
+  "$BINDIR/power-control.sh"
 rm -rf /etc/rocm-powerd
 systemctl daemon-reload
 
