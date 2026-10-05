@@ -38,7 +38,7 @@ toml_get() {
 
 # Determine configuration file path
 find_config() {
-    local candidates=("/etc/rocm-powerd/rocm-powerd.toml" "$HOME/.config/rocm-powerd/rocm-powerd.toml" "./rocm-powerd.toml")
+    local candidates=("/etc/rocm-powerd/rocm-powerd.toml" "${HOME:-/root}/.config/rocm-powerd/rocm-powerd.toml" "./rocm-powerd.toml")
     if [[ -n "${CONFIG:-}" && -f "$CONFIG" ]]; then
         echo "$CONFIG"
         return
@@ -146,6 +146,11 @@ if [[ -n "$CFG_PATH" ]]; then
     AI_CMD=$(toml_get scripts ai "${AI_CMD}" "$CFG_PATH" )
     IDLE_CMD=$(toml_get scripts idle "${IDLE_CMD}" "$CFG_PATH" )
 fi
+
+# "./script.sh" in the config means the helper next to this daemon; systemd's
+# working directory is /, so resolve it here.
+[[ $AI_CMD == ./* ]] && AI_CMD="$SCRIPT_DIR/${AI_CMD#./}"
+[[ $IDLE_CMD == ./* ]] && IDLE_CMD="$SCRIPT_DIR/${IDLE_CMD#./}"
 
 # compute trigger count for idle based on duration
 if [[ -n "$IDLE_DURATION_SEC" && -n "$POLL_INTERVAL" ]]; then

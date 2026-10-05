@@ -21,9 +21,10 @@ clamp_to_sysfs_bounds() {
             value=$bound
         fi
     fi
+    # Some firmware reports a max of 0 meaning "no maximum", not 0 W.
     if [[ -n "$max_file" && -r "$max_file" ]]; then
         bound=$(<"$max_file")
-        if [[ $bound =~ ^[0-9]+$ ]] && (( value > bound )); then
+        if [[ $bound =~ ^[0-9]+$ ]] && (( bound > 0 && value > bound )); then
             value=$bound
         fi
     fi

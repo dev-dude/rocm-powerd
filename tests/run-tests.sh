@@ -165,6 +165,48 @@ EOF
     assert_eq '61 87 275 1 0' "$(<"$ENV_LOG")" "daemon config exports"
 }
 
+test_zero_max_bound_is_unbounded() {
+    make_fixture zero-max
+    printf '%s\n' 0 >"$SYSFS/class/powercap/intel-rapl:0/constraint_1_max_power_uw"
+    run_ai
+
+    assert_eq 90000000 "$(<"$SYSFS/class/powercap/intel-rapl:0/constraint_1_power_limit_uw")" "PL2 with max of 0"
+}
+
+test_daemon_without_home_resolves_relative_scripts() {
+    make_fixture relative
+    ENV_LOG="$FIXTURE/environment.log"
+    CONFIG_FILE="$FIXTURE/rocm-powerd.toml"
+    INSTALL_DIR="$FIXTURE/install"
+    mkdir -p "$INSTALL_DIR"
+    cp "$REPO_DIR/gpu-auto-mode.sh" "$INSTALL_DIR/"
+
+    cat >"$INSTALL_DIR/capture-env.sh" <<'EOF'
+#!/usr/bin/env bash
+printf '%s %s\n' "$AI_CPU_PL1_WATTS" "$AI_CPU_PL2_WATTS" >"$ENV_LOG"
+EOF
+    chmod +x "$INSTALL_DIR/capture-env.sh"
+    cat >"$CONFIG_FILE" <<EOF
+[powermanager]
+busy_watt = 1
+idle_watt = 0
+busy_trigger_count = 1
+
+[scripts]
+ai = "./capture-env.sh"
+idle = ""
+
+[ai_mode]
+cpu_pl1_watts = 95
+cpu_pl2_watts = 125
+EOF
+
+    (cd / && env -u HOME PATH="$MOCK_BIN:$PATH" ENV_LOG="$ENV_LOG" MOCK_GPU_POWER_W=10 \
+        bash "$INSTALL_DIR/gpu-auto-mode.sh" --once --config "$CONFIG_FILE")
+    [[ -f "$ENV_LOG" ]] || fail "relative AI script was not run from the daemon's directory"
+    assert_eq '95 125' "$(<"$ENV_LOG")" "config read without HOME"
+}
+
 test_invalid_limits_fail_before_mutation() {
     make_fixture invalid
     if run_ai AI_CPU_PL1_WATTS=not-a-number; then
@@ -178,4 +220,6 @@ test_defaults_and_restore
 test_clamping_and_idempotent_snapshot
 test_daemon_exports_new_config_keys
 test_invalid_limits_fail_before_mutation
+test_zero_max_bound_is_unbounded
+test_daemon_without_home_resolves_relative_scripts
 echo "All rocm-powerd tests passed"
