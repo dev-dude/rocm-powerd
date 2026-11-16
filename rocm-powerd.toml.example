@@ -31,8 +31,11 @@ idle = "./idle-mode.sh"
 # rocm-smi --setsclk 2
 # rocm-smi --setmclk 1
 cpu_max_freq_mhz = 3000
+# 65/65 W ran an LLM batch job at the same speed as 95/125 W and cut the wall peak
+# by ~70 W; 45/45 W saved only ~4 W more (BENCHMARKS.md). Without these keys
+# ai-mode.sh uses 65/90 W.
 cpu_pl1_watts = 65
-cpu_pl2_watts = 90
+cpu_pl2_watts = 65
 gpu_power_cap_watts = 294
 sclk_level = 2
 mclk_level = 1
@@ -44,6 +47,11 @@ mclk_level = 1
 # rocm-smi --setperflevel auto
 # rocm-smi --resetprofile
 cpu_max_freq_mhz = 3000
+# Fixed GPU clock levels for idle. Set these: otherwise idle mode restores the levels
+# saved on the first AI-mode switch, and if a model was loading then (VRAM at full
+# clock) the GPU idles at ~50 W instead of ~30 W on an RX 7900 XTX (BENCHMARKS.md).
+# sclk_level = 1
+# mclk_level = 1
 
 # CPU/GPU power limits, GPU clock selections, and the GPU performance level
 # that were active before AI mode are captured and restored automatically.

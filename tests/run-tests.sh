@@ -216,7 +216,29 @@ test_invalid_limits_fail_before_mutation() {
     [[ ! -s "$COMMAND_LOG" ]] || fail "invalid input ran tuning commands before validation"
 }
 
+# [idle_mode] sclk_level / mclk_level win over the levels saved before AI mode (a snapshot
+# taken while a model was loading kept VRAM at full clock and the GPU idled at ~50 W).
+test_idle_clock_levels_override_snapshot() {
+    make_fixture idle-levels
+    printf '0: 96Mhz\n1: 456Mhz\n2: 772Mhz\n3: 1249Mhz *\n' >"$SYSFS/class/hwmon/hwmon7/device/pp_dpm_mclk"
+    run_ai
+    assert_contains $'mclk\t3' "$STATE/original-state"
+    : >"$COMMAND_LOG"
+    run_idle IDLE_SCLK_LEVEL=1 IDLE_MCLK_LEVEL=1
+    assert_contains 'rocm-smi --setperflevel manual' "$COMMAND_LOG"
+    assert_contains 'rocm-smi --setsclk 1' "$COMMAND_LOG"
+    assert_contains 'rocm-smi --setmclk 1' "$COMMAND_LOG"
+    if grep -F 'rocm-smi --setmclk 3' "$COMMAND_LOG" >/dev/null; then fail "idle mode restored the saved mclk 3"; fi
+
+    # Without the config levels the saved snapshot is still restored, as before.
+    : >"$COMMAND_LOG"
+    run_ai
+    run_idle
+    assert_contains 'rocm-smi --setmclk 3' "$COMMAND_LOG"
+}
+
 test_defaults_and_restore
+test_idle_clock_levels_override_snapshot
 test_clamping_and_idempotent_snapshot
 test_daemon_exports_new_config_keys
 test_invalid_limits_fail_before_mutation

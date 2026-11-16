@@ -172,6 +172,12 @@ if [[ -n "$CFG_PATH" ]]; then
     [[ -n "$AI_SCLK_LEVEL" ]] || AI_SCLK_LEVEL=$(toml_get ai_mode sclk "2" "$CFG_PATH" )
     [[ -n "$AI_MCLK_LEVEL" ]] || AI_MCLK_LEVEL=$(toml_get ai_mode mclk "1" "$CFG_PATH" )
     IDLE_CPU_MAX_FREQ_MHZ=$(toml_get idle_mode cpu_max_freq_mhz "" "$CFG_PATH" )
+    # Fixed idle GPU clock levels. Without them idle mode restores the levels saved on
+    # the first AI-mode switch, which can be the high ones a model was loading with.
+    IDLE_SCLK_LEVEL=$(toml_get idle_mode sclk_level "" "$CFG_PATH" )
+    IDLE_MCLK_LEVEL=$(toml_get idle_mode mclk_level "" "$CFG_PATH" )
+    export IDLE_SCLK_LEVEL IDLE_MCLK_LEVEL
+    log "Exported idle clock levels: SCLK=${IDLE_SCLK_LEVEL:-saved} MCLK=${IDLE_MCLK_LEVEL:-saved}"
     CPU_MAX_FREQ_KHZ=$(toml_get tuning cpu_max_freq_khz "" "$CFG_PATH" )
 
     if [[ -n "$AI_CPU_MAX_FREQ_MHZ" ]]; then

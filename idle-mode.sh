@@ -28,6 +28,9 @@ ORIGINAL_PERF=""
 ORIGINAL_SCLK=$(saved_state_value sclk || true)
 ORIGINAL_MCLK=$(saved_state_value mclk || true)
 ORIGINAL_PERF=$(saved_state_value perf || true)
+# Config [idle_mode] sclk_level / mclk_level win over the levels saved before AI mode.
+[[ -n "${IDLE_SCLK_LEVEL:-}" ]] && { ORIGINAL_SCLK="$IDLE_SCLK_LEVEL"; ORIGINAL_PERF=manual; }
+[[ -n "${IDLE_MCLK_LEVEL:-}" ]] && { ORIGINAL_MCLK="$IDLE_MCLK_LEVEL"; ORIGINAL_PERF=manual; }
 
 if [[ -n "$ORIGINAL_SCLK" || -n "$ORIGINAL_MCLK" ]]; then
     rocm-smi --resetclocks

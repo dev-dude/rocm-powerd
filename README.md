@@ -72,7 +72,15 @@ mclk_level = 1
 
 [idle_mode]
 cpu_max_freq_mhz = 3000
+# Recommended: fixed idle GPU clock levels (see below)
+sclk_level = 1
+mclk_level = 1
 ```
+
+`[idle_mode] sclk_level` / `mclk_level` set the GPU clock levels idle mode returns to.
+Without them, idle mode restores the levels it saved on the first switch into AI mode;
+if a model was still loading at that moment (VRAM at full clock), the GPU then idles
+at ~50 W instead of ~30 W on an RX 7900 XTX.
 
 On the first transition into AI mode, rocm-powerd records the current Intel RAPL
 limits, AMD GPU `power1_cap`, selected SCLK/MCLK states, and GPU performance
@@ -123,6 +131,11 @@ License
 - MIT (see LICENSE)
 
 Tuning results
-- On the author's AMD Radeon RX 7900 XTX system, inference tuning reduced GPU/system power during LLM inference at the cost of some throughput. Results will vary depending on hardware, model, and workload.
-- Note: applying inference-tuned settings often prevents the GPU from reaching the absolute lowest idle power (sub-50 W). `rocm-powerd` watches power and restores idle settings when the workload subsides.
-- Depending on tuning parameters, throughput may decrease in exchange for lower power consumption. On the author's hardware, throughput decreased by roughly 10–15% while reducing inference power.
+- Measured numbers are in [BENCHMARKS.md](BENCHMARKS.md).
+- On the author's RX 7900 XTX + i9-13900KF machine, an AI-mode CPU cap of 65/65 W ran
+  an LLM batch job at the same speed as 95/125 W and cut the wall peak by ~70 W;
+  45/45 W saved only ~4 W more.
+- Fixed idle clock levels keep the GPU at ~27-34 W idle with a model loaded, instead
+  of ~50 W.
+- AI mode's lower GPU clock levels (sclk 2, mclk 1) trade some throughput for lower
+  inference power. Results vary with hardware, model and workload.
